@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaul-Quality CSS Drawer with Nested Support</title>
+    <style>
+        /* ===== CSS Reset & Base ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* Design tokens */
+            --drawer-bg: #fff;
+            --drawer-border: hsl(0 0% 90%);
+            --drawer-handle: hsl(0 0% 80%);
+            --drawer-handle-hover: hsl(0 0% 60%);
+            --backdrop-color: hsl(0 0% 0% / 0.4);
+            --text-primary: hsl(0 0% 10%);
+            --text-secondary: hsl(0 0% 40%);
+            --text-tertiary: hsl(0 0% 55%);
+            --accent: hsl(220 90% 56%);
+            --accent-hover: hsl(220 90% 50%);
+            --danger: hsl(0 72% 51%);
+            --danger-hover: hsl(0 72% 45%);
+            --success: hsl(142 71% 45%);
+            --input-border: hsl(0 0% 85%);
+            --input-focus: hsl(220 90% 56% / 0.3);
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 24px;
+            --shadow-drawer:
+                0 -10px 60px hsl(0 0% 0% / 0.12),
+                0 -4px 20px hsl(0 0% 0% / 0.08);
+
+            /* Animation curves */
+            --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --duration-open: 0.5s;
+            --duration-close: 0.35s;
+
+            /* Nesting levels */
+            --drawer-level: 0;
+            --scale-factor: 0.04;
+            --translate-factor: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --drawer-bg: hsl(0 0% 12%);
+                --drawer-border: hsl(0 0% 20%);
+                --drawer-handle: hsl(0 0% 35%);
+                --drawer-handle-hover: hsl(0 0% 50%);
+                --text-primary: hsl(0 0% 95%);
+                --text-secondary: hsl(0 0% 60%);
+                --text-tertiary: hsl(0 0% 45%);
+                --input-border: hsl(0 0% 25%);
+                --shadow-drawer:
+                    0 -10px 60px hsl(0 0% 0% / 0.4),
+                    0 -4px 20px hsl(0 0% 0% / 0.3);
+            }
+        }
+
+        html {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            color: var(--text-primary);
+        }
+
+        body {
+            min-block-size: 100dvh;
+            background: linear-gradient(145deg, hsl(220 30% 96%) 0%, hsl(260 20% 94%) 100%);
+            display: grid;
+            place-items: center;
+            padding: 2rem;
+            transition:
+                scale var(--duration-open) var(--ease-spring),
+                border-radius var(--duration-open) var(--ease-spring),
+                filter var(--duration-open) ease;
+            transform-origin: center top;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(145deg, hsl(220 20% 8%) 0%, hsl(260 15% 10%) 100%);
+            }
+        }
+
+        /* Scale body when any drawer is open */
+        body:has(.drawer[open]) {
+            overflow: hidden;
+            scale: 0.94;
+            border-radius: var(--radius-lg);
+        }
+
+        /* ===== Drawer Component ===== */
+        .drawer {
+            /* Reset dialog defaults */
+            border: none;
+            padding: 0;
+            max-width: 100%;
+            max-height: 100%;
+
+            /* Positioning */
+            position: fixed;
+            inset: auto 0 0 0;
+            margin: 0 auto;
+
+            /* Sizing */
+            width: 100vi;
+            max-width: 500px;
+            height: auto;
+            max-height: 96dvh;
+
+            /* Visual styling */
+            background: var(--drawer-bg);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            box-shadow: var(--shadow-drawer);
+            overflow: hidden;
+
+            /* Animation - closed state */
+            opacity: 0;
+            translate: 0 100%;
+            scale: 1;
+            transition:
+                display var(--duration-close) allow-discrete,
+                overlay var(--duration-close) allow-discrete,
+                translate var(--duration-close) var(--ease-out),
+                scale var(--duration-close) var(--ease-out),
+                opacity var(--duration-close) ease,
+                filter var(--duration-close) ease;
+
+            /* Ensure proper stacking */
+            isolation: isolate;
+
+            /* Backdrop styling */
+            &::backdrop {
+                background: var(--backdrop-color);
+                opacity: 0;
+                transition:
+                    display var(--duration-close) allow-discrete,
+                    overlay var(--duration-close) allow-discrete,
+                    opacity var(--duration-close) ease;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+            }
+
+            /* Open state */
+            &[open] {
+                opacity: 1;
+                translate: 0 0;
+                transition:
+                    display var(--duration-open) allow-discrete,
+                    overlay var(--duration-open) allow-discrete,
+                    translate var(--duration-open) var(--ease-spring),
+                    scale var(--duration-open) var(--ease-spring),
+                    opacity 0.15s ease,
+                    filter var(--duration-open) ease;
+            }
+
+            &[open]::backdrop {
+                opacity: 1;
+                transition:
+                    display var(--duration-open) allow-discrete,
+                    overlay var(--duration-open) allow-discrete,
+                    opacity 0.2s ease;
+            }
+
+            /* Entry animation */
+            @starting-style {
+                &[open] {
+                    opacity: 0;
+                    translate: 0 100%;
+                }
+
+                &[open]::backdrop {
+                    opacity: 0;
+                }
+            }
+        }
+
+        /* ===== NESTED DRAWER MAGIC ===== */
+
+        /* Level 1: When drawer-2 is open, drawer-1 scales down */
+        .drawer[data-level="1"]:has(~ .drawer[data-level="2"][open]) {
+            scale: 0.92;
+            translate: 0 -24px;
+            border-radius: var(--radius-lg);
+            filter: brightness(0.92);
+            pointer-events: none;
+        }
+
+        /* Level 2: When drawer-3 is open, drawer-2 scales down */
+        .drawer[data-level="2"]:has(~ .drawer[data-level="3"][open]) {
+            scale: 0.92;
+            translate: 0 -24px;
+            border-radius: var(--radius-lg);
+            filter: brightness(0.92);
+            pointer-events: none;
+        }
+
+        /* Level 1 when both 2 and 3 are open - scale even more */
+        .drawer[data-level="1"]:has(~ .drawer[data-level="2"][open] ~ .drawer[data-level="3"][open]) {
+            scale: 0.85;
+            translate: 0 -48px;
+            filter: brightness(0.85);
+        }
+
+        /* Hide backdrop for nested drawers (parent backdrop suffices) */
+        .drawer[data-level="2"]::backdrop,
+        .drawer[data-level="3"]::backdrop {
+            background: hsl(0 0% 0% / 0.2);
+            backdrop-filter: none;
+        }
+
+        /* ===== Drawer Handle ===== */
+        .drawer-handle {
+            display: flex;
+            justify-content: center;
+            padding-block: 1rem 0.5rem;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+
+            &::before {
+                content: '';
+                width: 48px;
+                height: 5px;
+                background: var(--drawer-handle);
+                border-radius: 100px;
+                transition:
+                    background 0.2s ease,
+                    width 0.2s var(--ease-spring);
+            }
+
+            &:hover::before {
+                background: var(--drawer-handle-hover);
+                width: 56px;
+            }
+
+            &:active {
+                cursor: grabbing;
+            }
+        }
+
+        /* ===== Drawer Content ===== */
+        .drawer-content {
+            padding: 0.5rem 1.5rem 2rem;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            max-height: calc(96dvh - 60px);
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-block-end: 1rem;
+        }
+
+        .drawer-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .drawer-description {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-block-end: 1.5rem;
+        }
+
+        /* ===== Close Button ===== */
+        .close-btn {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--input-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition:
+                background 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease;
+
+            &:hover {
+                background: hsl(0 0% 0% / 0.05);
+                border-color: var(--drawer-handle-hover);
+                color: var(--text-primary);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: 2px;
+            }
+
+            svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            font-family: inherit;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition:
+                background 0.15s ease,
+                transform 0.1s ease,
+                box-shadow 0.15s ease;
+
+            &:active {
+                transform: scale(0.98);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: 2px;
+            }
+
+            svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        .btn--primary {
+            color: white;
+            background: var(--accent);
+            box-shadow: 0 1px 2px hsl(220 90% 40% / 0.2);
+
+            &:hover {
+                background: var(--accent-hover);
+            }
+        }
+
+        .btn--secondary {
+            color: var(--text-primary);
+            background: transparent;
+            border: 1.5px solid var(--input-border);
+
+            &:hover {
+                background: hsl(0 0% 0% / 0.04);
+                border-color: var(--drawer-handle-hover);
+            }
+        }
+
+        .btn--danger {
+            color: white;
+            background: var(--danger);
+
+            &:hover {
+                background: var(--danger-hover);
+            }
+        }
+
+        .btn--ghost {
+            color: var(--text-secondary);
+            background: transparent;
+            padding: 0.5rem 0.75rem;
+
+            &:hover {
+                color: var(--text-primary);
+                background: hsl(0 0% 0% / 0.04);
+            }
+        }
+
+        .btn--full {
+            width: 100%;
+        }
+
+        /* ===== Form Styling ===== */
+        .drawer-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--drawer-bg);
+            border: 1.5px solid var(--input-border);
+            border-radius: var(--radius-sm);
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+
+            &::placeholder {
+                color: var(--text-tertiary);
+            }
+
+            &:hover {
+                border-color: var(--drawer-handle-hover);
+            }
+
+            &:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px var(--input-focus);
+            }
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            field-sizing: content;
+        }
+
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-block-start: 0.5rem;
+        }
+
+        .form-actions--stacked {
+            flex-direction: column;
+        }
+
+        /* ===== List Items (for selection drawers) ===== */
+        .drawer-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .drawer-list-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+
+            &:hover {
+                background: hsl(0 0% 0% / 0.04);
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--accent);
+                outline-offset: -2px;
+            }
+        }
+
+        .drawer-list-icon {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            background: hsl(0 0% 0% / 0.04);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        .drawer-list-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .drawer-list-title {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .drawer-list-subtitle {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-block-start: 0.125rem;
+        }
+
+        /* ===== Divider ===== */
+        .drawer-divider {
+            height: 1px;
+            background: var(--input-border);
+            margin-block: 1rem;
+            border: none;
+        }
+
+        /* ===== Alert/Confirm Drawer ===== */
+        .drawer-alert {
+            text-align: center;
+            padding-block: 1rem;
+        }
+
+        .drawer-alert-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: hsl(0 72% 51% / 0.1);
+            color: var(--danger);
+
+            svg {
+                width: 28px;
+                height: 28px;
+            }
+        }
+
+        .drawer-alert-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-block-end: 0.5rem;
+        }
+
+        .drawer-alert-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-block-end: 1.5rem;
+        }
+
+        /* ===== Reduced Motion ===== */
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            body:has(.drawer[open]) {
+                scale: 1;
+            }
+
+            .drawer[data-level="1"]:has(~ .drawer[data-level="2"][open]),
+            .drawer[data-level="2"]:has(~ .drawer[data-level="3"][open]) {
+                scale: 1;
+                translate: 0 0;
+                filter: none;
+            }
+        }
+
+        /* Safe area for mobile */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .drawer-content {
+                padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* ===== Demo Page Styling ===== */
+        .demo-container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .demo-title {
+            font-size: clamp(1.75rem, 5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-block-end: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-block-end: 2rem;
+            line-height: 1.5;
+        }
+
+        .demo-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-block-end: 2.5rem;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            list-style: none;
+        }
+
+        .feature-item {
+            font-size: 0.8125rem;
+            padding: 0.375rem 0.75rem;
+            background: hsl(0 0% 0% / 0.05);
+            border-radius: 100px;
+            color: var(--text-secondary);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .feature-item {
+                background: hsl(0 0% 100% / 0.08);
+            }
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.5rem;
+            border-radius: 100px;
+            background: hsl(142 71% 45% / 0.1);
+            color: var(--success);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="demo-container">
+        <h1 class="demo-title">Nested Drawers</h1>
+        <p class="demo-subtitle">
+            Stack multiple drawers with smooth scaling animations.
+            <br>Pure CSS transitions, no JavaScript libraries.
+        </p>
+
+        <div class="demo-buttons">
+            <button class="btn btn--primary" id="open-create">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                Create Issue
+            </button>
+
+            <button class="btn btn--secondary" id="open-share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Share
+            </button>
+
+            <button class="btn btn--secondary" id="open-settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+                </svg>
+                Settings
+            </button>
+        </div>
+
+        <ul class="feature-list">
+            <li class="feature-item">Nested Stacking</li>
+            <li class="feature-item">:has() Selector</li>
+            <li class="feature-item">@starting-style</li>
+            <li class="feature-item">allow-discrete</li>
+            <li class="feature-item">Spring Easing</li>
+            <li class="feature-item">Dark Mode</li>
+        </ul>
+    </main>
+
+    <!-- ===== DRAWER 1: Create Issue ===== -->
+    <dialog class="drawer" id="drawer-create" data-level="1">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <header class="drawer-header">
+                <h2 class="drawer-title">Create a new issue</h2>
+                <button class="close-btn" data-close="drawer-create" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <p class="drawer-description">
+                Fill out the details below. You can assign a team member and set priority.
+            </p>
+
+            <form class="drawer-form" method="dialog">
+                <div class="form-group">
+                    <label class="form-label" for="title">Title</label>
+                    <input class="form-input" type="text" id="title" placeholder="Issue title...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="desc">Description</label>
+                    <textarea class="form-textarea" id="desc" placeholder="Describe the issue..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Assignee</label>
+                    <button type="button" class="btn btn--secondary btn--full" id="open-assignee">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        Select Assignee
+                    </button>
+                </div>
+
+                <hr class="drawer-divider">
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn--secondary" data-close="drawer-create">Cancel</button>
+                    <button type="submit" class="btn btn--primary" style="flex:1">Create Issue</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- ===== DRAWER 2: Select Assignee (Nested) ===== -->
+    <dialog class="drawer" id="drawer-assignee" data-level="2">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <header class="drawer-header">
+                <h2 class="drawer-title">Select Assignee</h2>
+                <button class="close-btn" data-close="drawer-assignee" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <ul class="drawer-list">
+                <li>
+                    <button class="drawer-list-item" id="open-confirm-alex">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Alex Chen</div>
+                            <div class="drawer-list-subtitle">Engineering Lead</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-assignee">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Sarah Miller</div>
+                            <div class="drawer-list-subtitle">Product Designer</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-assignee">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">James Wilson</div>
+                            <div class="drawer-list-subtitle">Backend Developer</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-assignee">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Emma Davis</div>
+                            <div class="drawer-list-subtitle">Frontend Developer</div>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </dialog>
+
+    <!-- ===== DRAWER 3: Confirm (Double Nested) ===== -->
+    <dialog class="drawer" id="drawer-confirm" data-level="3">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <div class="drawer-alert">
+                <div class="drawer-alert-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                </div>
+                <h3 class="drawer-alert-title">Assign to Alex?</h3>
+                <p class="drawer-alert-description">
+                    Alex currently has 12 active issues. Are you sure you want to assign this to them?
+                </p>
+                <div class="form-actions form-actions--stacked">
+                    <button class="btn btn--danger btn--full" id="confirm-assign">Yes, Assign Anyway</button>
+                    <button class="btn btn--ghost btn--full" data-close="drawer-confirm">Go Back</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===== DRAWER: Share ===== -->
+    <dialog class="drawer" id="drawer-share" data-level="1">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <header class="drawer-header">
+                <h2 class="drawer-title">Share</h2>
+                <button class="close-btn" data-close="drawer-share" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <ul class="drawer-list">
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-share">
+                        <div class="drawer-list-icon"
+                            style="background: hsl(203 89% 53% / 0.1); color: hsl(203 89% 53%);">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Share on X</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-share">
+                        <div class="drawer-list-icon"
+                            style="background: hsl(214 100% 59% / 0.1); color: hsl(214 100% 59%);">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Share on Facebook</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-share">
+                        <div class="drawer-list-icon"
+                            style="background: hsl(0 0% 0% / 0.06); color: var(--text-primary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Copy Link</div>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </dialog>
+
+    <!-- ===== DRAWER: Settings ===== -->
+    <dialog class="drawer" id="drawer-settings" data-level="1">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <header class="drawer-header">
+                <h2 class="drawer-title">Settings</h2>
+                <button class="close-btn" data-close="drawer-settings" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <ul class="drawer-list">
+                <li>
+                    <button class="drawer-list-item" id="open-account">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Account</div>
+                            <div class="drawer-list-subtitle">Manage your account settings</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-settings">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Notifications</div>
+                            <div class="drawer-list-subtitle">Configure how you receive alerts</div>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="drawer-list-item" data-close="drawer-settings">
+                        <div class="drawer-list-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </div>
+                        <div class="drawer-list-content">
+                            <div class="drawer-list-title">Privacy</div>
+                            <div class="drawer-list-subtitle">Control your data and visibility</div>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </dialog>
+
+    <!-- ===== DRAWER: Account (Nested from Settings) ===== -->
+    <dialog class="drawer" id="drawer-account" data-level="2">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <div class="drawer-content">
+            <header class="drawer-header">
+                <h2 class="drawer-title">Account Settings</h2>
+                <button class="close-btn" data-close="drawer-account" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </header>
+
+            <form class="drawer-form" method="dialog">
+                <div class="form-group">
+                    <label class="form-label" for="name">Display Name</label>
+                    <input class="form-input" type="text" id="name" value="John Doe">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input class="form-input" type="email" id="email" value="john@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="timezone">Timezone</label>
+                    <select class="form-select" id="timezone">
+                        <option>Pacific Time (PT)</option>
+                        <option>Eastern Time (ET)</option>
+                        <option>Central European Time (CET)</option>
+                        <option>India Standard Time (IST)</option>
+                    </select>
+                </div>
+
+                <hr class="drawer-divider">
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn--secondary" data-close="drawer-account">Cancel</button>
+                    <button type="submit" class="btn btn--primary" style="flex:1">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <script>
+        // ===== Minimal Vanilla JS Controller =====
+
+        // Generic open/close handlers using data attributes
+        document.addEventListener('click', (e) => {
+            // Handle close buttons
+            const closeBtn = e.target.closest('[data-close]');
+            if (closeBtn) {
+                const drawerId = closeBtn.dataset.close;
+                document.getElementById(drawerId)?.close();
+                return;
+            }
+
+            // Handle backdrop clicks
+            const drawer = e.target.closest('.drawer');
+            if (drawer && e.target === drawer) {
+                drawer.close();
+            }
+        });
+
+        // Specific open triggers
+        const triggers = {
+            'open-create': 'drawer-create',
+            'open-share': 'drawer-share',
+            'open-settings': 'drawer-settings',
+            'open-assignee': 'drawer-assignee',
+            'open-confirm-alex': 'drawer-confirm',
+            'open-account': 'drawer-account',
+        };
+
+        Object.entries(triggers).forEach(([triggerId, drawerId]) => {
+            document.getElementById(triggerId)?.addEventListener('click', () => {
+                document.getElementById(drawerId)?.showModal();
+            });
+        });
+
+        // Confirm action - closes all drawers
+        document.getElementById('confirm-assign')?.addEventListener('click', () => {
+            // Close all open drawers in reverse order
+            ['drawer-confirm', 'drawer-assignee', 'drawer-create'].forEach(id => {
+                document.getElementById(id)?.close();
+            });
+        });
+    </script>
+</body>
+
+</html>
