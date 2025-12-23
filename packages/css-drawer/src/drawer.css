@@ -1,0 +1,286 @@
+/* CSS Drawer - Vaul-quality drawer with auto-nesting and directions */
+
+:root {
+  --drawer-bg: #fff;
+  --drawer-radius: 24px;
+  --drawer-max-width: 500px;
+  --drawer-max-height: 96dvh;
+  --drawer-backdrop: hsl(0 0% 0% / 0.4);
+  --drawer-handle: hsl(0 0% 80%);
+  --drawer-shadow-bottom: 0 -10px 60px hsl(0 0% 0% / 0.12), 0 -4px 20px hsl(0 0% 0% / 0.08);
+  --drawer-shadow-top: 0 10px 60px hsl(0 0% 0% / 0.12), 0 4px 20px hsl(0 0% 0% / 0.08);
+  --drawer-shadow-right: -10px 0 60px hsl(0 0% 0% / 0.12), -4px 0 20px hsl(0 0% 0% / 0.08);
+  --drawer-shadow-left: 10px 0 60px hsl(0 0% 0% / 0.12), 4px 0 20px hsl(0 0% 0% / 0.08);
+  --drawer-duration: 0.5s;
+  --drawer-duration-close: 0.35s;
+  --drawer-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --drawer-bg: hsl(0 0% 12%);
+    --drawer-handle: hsl(0 0% 35%);
+    --drawer-shadow-bottom: 0 -10px 60px hsl(0 0% 0% / 0.4), 0 -4px 20px hsl(0 0% 0% / 0.3);
+    --drawer-shadow-top: 0 10px 60px hsl(0 0% 0% / 0.4), 0 4px 20px hsl(0 0% 0% / 0.3);
+    --drawer-shadow-right: -10px 0 60px hsl(0 0% 0% / 0.4), -4px 0 20px hsl(0 0% 0% / 0.3);
+    --drawer-shadow-left: 10px 0 60px hsl(0 0% 0% / 0.4), 4px 0 20px hsl(0 0% 0% / 0.3);
+  }
+}
+
+/* Background scale effect */
+body {
+  transition: scale var(--drawer-duration) var(--drawer-ease), border-radius var(--drawer-duration) var(--drawer-ease);
+  transform-origin: center top;
+}
+
+body:has(.drawer[open]) {
+  overflow: hidden;
+  scale: 0.94;
+  border-radius: var(--drawer-radius);
+}
+
+/* Base drawer */
+.drawer {
+  border: none;
+  padding: 0;
+  margin: 0;
+  max-width: 100%;
+  max-height: 100%;
+  position: fixed;
+  background: var(--drawer-bg);
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    display var(--drawer-duration-close) allow-discrete,
+    overlay var(--drawer-duration-close) allow-discrete,
+    translate var(--drawer-duration-close) var(--drawer-ease),
+    scale var(--drawer-duration-close) var(--drawer-ease),
+    filter var(--drawer-duration-close) ease,
+    opacity var(--drawer-duration-close) ease;
+
+  /* Default: bottom */
+  --_translate-closed: 0 100%;
+  inset: auto 0 0 0;
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--drawer-max-width);
+  height: auto;
+  max-height: var(--drawer-max-height);
+  border-radius: var(--drawer-radius) var(--drawer-radius) 0 0;
+  box-shadow: var(--drawer-shadow-bottom);
+  translate: var(--_translate-closed);
+}
+
+.drawer::backdrop {
+  background: var(--drawer-backdrop);
+  opacity: 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    display var(--drawer-duration-close) allow-discrete,
+    overlay var(--drawer-duration-close) allow-discrete,
+    opacity var(--drawer-duration-close) ease;
+}
+
+.drawer[open] {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    display var(--drawer-duration) allow-discrete,
+    overlay var(--drawer-duration) allow-discrete,
+    translate var(--drawer-duration) var(--drawer-ease),
+    scale var(--drawer-duration) var(--drawer-ease),
+    filter var(--drawer-duration) ease,
+    opacity 0.15s ease;
+}
+
+.drawer[open]::backdrop {
+  opacity: 1;
+  transition: display var(--drawer-duration) allow-discrete, overlay var(--drawer-duration) allow-discrete, opacity 0.2s ease;
+}
+
+@starting-style {
+  .drawer[open] { opacity: 0; translate: var(--_translate-closed); }
+  .drawer[open]::backdrop { opacity: 0; }
+}
+
+/* ===== DIRECTIONS ===== */
+
+/* Right */
+.drawer[data-direction="right"] {
+  --_translate-closed: 100% 0;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: 100%;
+  max-width: var(--drawer-max-width);
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: var(--drawer-radius) 0 0 var(--drawer-radius);
+  box-shadow: var(--drawer-shadow-right);
+}
+
+/* Left */
+.drawer[data-direction="left"] {
+  --_translate-closed: -100% 0;
+  inset: 0 auto 0 0;
+  margin: 0;
+  width: 100%;
+  max-width: var(--drawer-max-width);
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0 var(--drawer-radius) var(--drawer-radius) 0;
+  box-shadow: var(--drawer-shadow-left);
+}
+
+/* Top */
+.drawer[data-direction="top"] {
+  --_translate-closed: 0 -100%;
+  inset: 0 0 auto 0;
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--drawer-max-width);
+  height: auto;
+  max-height: var(--drawer-max-height);
+  border-radius: 0 0 var(--drawer-radius) var(--drawer-radius);
+  box-shadow: var(--drawer-shadow-top);
+}
+
+/* ===== AUTO-NESTING (up to 5 levels) ===== */
+/* Uses sibling combinators to count open drawers */
+
+/* 1+ open drawers after */
+.drawer[open]:has(~ .drawer[open]) {
+  scale: 0.94;
+  translate: 0 -20px;
+  border-radius: var(--drawer-radius);
+  filter: brightness(0.92);
+  pointer-events: none;
+}
+
+/* 2+ open drawers after */
+.drawer[open]:has(~ .drawer[open] ~ .drawer[open]) {
+  scale: 0.88;
+  translate: 0 -40px;
+  filter: brightness(0.84);
+}
+
+/* 3+ open drawers after */
+.drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open]) {
+  scale: 0.82;
+  translate: 0 -60px;
+  filter: brightness(0.76);
+}
+
+/* 4+ open drawers after */
+.drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open]) {
+  scale: 0.76;
+  translate: 0 -80px;
+  filter: brightness(0.68);
+}
+
+/* 5+ open drawers after */
+.drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open]) {
+  scale: 0.70;
+  translate: 0 -100px;
+  filter: brightness(0.60);
+}
+
+/* Lighter backdrop for stacked drawers */
+.drawer[open] ~ .drawer[open]::backdrop {
+  background: hsl(0 0% 0% / 0.15);
+  backdrop-filter: none;
+}
+
+/* Handle */
+.drawer-handle {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0.5rem;
+  cursor: grab;
+}
+
+.drawer-handle::before {
+  content: '';
+  width: 48px;
+  height: 5px;
+  background: var(--drawer-handle);
+  border-radius: 100px;
+  transition: width 0.2s var(--drawer-ease), height 0.2s var(--drawer-ease), background 0.2s ease;
+}
+
+.drawer-handle:hover::before {
+  width: 56px;
+  background: hsl(0 0% 60%);
+}
+
+/* Vertical handle for left/right drawers */
+.drawer[data-direction="left"] .drawer-handle,
+.drawer[data-direction="right"] .drawer-handle {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  writing-mode: vertical-lr;
+}
+
+.drawer[data-direction="left"] .drawer-handle { right: 0; }
+.drawer[data-direction="right"] .drawer-handle { left: 0; }
+
+.drawer[data-direction="left"] .drawer-handle::before,
+.drawer[data-direction="right"] .drawer-handle::before {
+  width: 5px;
+  height: 48px;
+}
+
+.drawer[data-direction="left"] .drawer-handle:hover::before,
+.drawer[data-direction="right"] .drawer-handle:hover::before {
+  width: 5px;
+  height: 56px;
+}
+
+/* Content */
+.drawer-content {
+  padding: 0.5rem 1.5rem 2rem;
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-height: calc(var(--drawer-max-height) - 60px);
+}
+
+/* Content adjustments for directions */
+.drawer[data-direction="left"] .drawer-content,
+.drawer[data-direction="right"] .drawer-content {
+  padding: 1.5rem;
+  padding-left: 2.5rem;
+  max-height: 100%;
+  height: 100%;
+}
+
+.drawer[data-direction="top"] .drawer-content {
+  padding-bottom: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  body:has(.drawer[open]) {
+    scale: 1;
+  }
+
+  .drawer[open]:has(~ .drawer[open]),
+  .drawer[open]:has(~ .drawer[open] ~ .drawer[open]),
+  .drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open]),
+  .drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open]),
+  .drawer[open]:has(~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open] ~ .drawer[open]) {
+    scale: 1;
+    translate: 0 0;
+    filter: none;
+  }
+}

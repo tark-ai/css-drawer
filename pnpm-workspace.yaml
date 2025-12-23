@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+  - demo
+
+onlyBuiltDependencies:
+  - esbuild
+  - rolldown
