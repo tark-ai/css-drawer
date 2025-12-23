@@ -12,7 +12,7 @@ A near drop-in replacement for [Vaul](https://vaul.emilkowal.ski) using native `
 | Animation engine | JavaScript | Pure CSS |
 | Nesting | Manual setup | Automatic (CSS `:has()`) |
 | Accessibility | Built-in | Automatic (native `<dialog>` + `inert`) |
-| API | Controlled state | Native refs |
+| API | Controlled state | Native refs or controlled state |
 
 ## Installation
 
@@ -104,7 +104,11 @@ Provides context for direction. Wrap your drawer content.
 
 ### Drawer.Content
 
-The dialog element. Pass a ref to control open/close.
+The dialog element. Supports both uncontrolled (refs) and controlled (state) modes.
+
+> **Note:** `open`/`onOpenChange` props are on `Content`, not `Root`. This is intentional - `Content` wraps the native `<dialog>` element, so open/close control lives where the element lives. `Root` only provides configuration (direction).
+
+#### Uncontrolled Mode (Refs)
 
 ```tsx
 const ref = useRef<HTMLDialogElement>(null)
@@ -118,9 +122,29 @@ ref.current?.close()
 <Drawer.Content ref={ref}>...</Drawer.Content>
 ```
 
+#### Controlled Mode (State)
+
+```tsx
+const [isOpen, setIsOpen] = useState(false)
+
+<Drawer.Content open={isOpen} onOpenChange={setIsOpen}>
+  ...
+</Drawer.Content>
+
+// Open programmatically
+<button onClick={() => setIsOpen(true)}>Open</button>
+```
+
+The `onOpenChange` callback fires when:
+- User presses Escape
+- User clicks the backdrop (if `closeOnOutsideClick` is true)
+- You call `setIsOpen(false)`
+
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `ref` | `Ref<HTMLDialogElement>` | - | Ref to control the dialog |
+| `ref` | `Ref<HTMLDialogElement>` | - | Ref to control the dialog (uncontrolled mode) |
+| `open` | `boolean` | - | Controlled open state |
+| `onOpenChange` | `(open: boolean) => void` | - | Called when open state changes |
 | `closeOnOutsideClick` | `boolean` | `true` | Close when clicking outside the drawer |
 | `className` | `string` | - | Additional CSS classes |
 | `...props` | `DialogHTMLAttributes` | - | All native dialog props |
@@ -360,6 +384,8 @@ const isMobile = useMediaQuery('(max-width: 768px)')
 
 Drawers automatically stack when opened. No configuration needed.
 
+### With Refs
+
 ```tsx
 const drawer1 = useRef<HTMLDialogElement>(null)
 const drawer2 = useRef<HTMLDialogElement>(null)
@@ -370,6 +396,34 @@ drawer1.current?.showModal()
 // Open drawer2 on top
 drawer2.current?.showModal()
 // drawer1 automatically scales down and dims
+```
+
+### With Controlled State
+
+```tsx
+const [settingsOpen, setSettingsOpen] = useState(false)
+const [confirmOpen, setConfirmOpen] = useState(false)
+
+<>
+  <button onClick={() => setSettingsOpen(true)}>Settings</button>
+
+  <Drawer.Root>
+    <Drawer.Content open={settingsOpen} onOpenChange={setSettingsOpen}>
+      <button onClick={() => setConfirmOpen(true)}>Delete Account</button>
+    </Drawer.Content>
+  </Drawer.Root>
+
+  <Drawer.Root>
+    <Drawer.Content open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <button onClick={() => {
+        setConfirmOpen(false)
+        setSettingsOpen(false)
+      }}>
+        Confirm
+      </button>
+    </Drawer.Content>
+  </Drawer.Root>
+</>
 ```
 
 Works up to 5 levels. CSS `:has()` selectors handle the visual stacking.

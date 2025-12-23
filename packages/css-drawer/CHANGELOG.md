@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.1.4
+
+### Patch Changes
+
+- Chore: Updated ReadMe to document controlled state
+
 ## 0.1.3
 
 ### Patch Changes
