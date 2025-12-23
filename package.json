@@ -1,10 +1,22 @@
 {
   "name": "css-drawer-monorepo",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "demo"
+  ],
   "scripts": {
     "build": "pnpm --filter css-drawer build && pnpm --filter demo build",
     "dev": "pnpm --filter demo dev",
-    "dev:lib": "pnpm --filter css-drawer dev"
+    "dev:lib": "pnpm --filter css-drawer dev",
+    "changeset": "changeset",
+    "version": "changeset version && pnpm install --lockfile-only",
+    "release": "pnpm build:published && changeset publish && pnpm run release:github",
+    "release:github": "node scripts/create-github-releases.js",
+    "build:published": "pnpm --filter css-drawer build"
   },
-  "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa"
+  "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa",
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8"
+  }
 }

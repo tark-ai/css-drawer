@@ -68,8 +68,23 @@
     "react"
   ],
   "license": "MIT",
+  "author": "Saransh Chaudhary",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/user/css-drawer.git"
-  }
+    "url": "git+https://github.com/tark-ai/css-drawer.git"
+  },
+  "homepage": "https://github.com/tark-ai/css-drawer#readme",
+  "bugs": {
+    "url": "https://github.com/tark-ai/css-drawer/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": [
+    "*.css",
+    "./dist/index.mjs",
+    "./dist/index.cjs",
+    "./dist/react.mjs",
+    "./dist/react.cjs"
+  ]
 }

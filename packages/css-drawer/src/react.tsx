@@ -7,6 +7,42 @@ import {
 } from 'react'
 import './drawer.css'
 
+/* ===== Auto-enable accessibility for stacked drawers ===== */
+if (typeof window !== 'undefined') {
+  const updateInertState = () => {
+    const openDrawers = Array.from(
+      document.querySelectorAll<HTMLDialogElement>('dialog.drawer[open]')
+    )
+    openDrawers.forEach((drawer, index) => {
+      const isTopmost = index === openDrawers.length - 1
+      if (isTopmost) {
+        drawer.removeAttribute('inert')
+      } else {
+        drawer.setAttribute('inert', '')
+      }
+    })
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (
+        mutation.type === 'attributes' &&
+        mutation.attributeName === 'open' &&
+        (mutation.target as HTMLElement).classList.contains('drawer')
+      ) {
+        updateInertState()
+        break
+      }
+    }
+  })
+
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open'],
+  })
+}
+
 /* ===== Types ===== */
 type Direction = 'bottom' | 'top' | 'left' | 'right'
 

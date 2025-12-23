@@ -3,6 +3,41 @@
  * Works with any framework: React, Vue, Svelte, vanilla JS
  */
 
+/* ===== Auto-enable accessibility for stacked drawers ===== */
+if (typeof window !== 'undefined') {
+  const updateInertState = () => {
+    const openDrawers = Array.from(
+      document.querySelectorAll<HTMLDialogElement>('dialog.drawer[open]')
+    )
+    openDrawers.forEach((drawer, index) => {
+      if (index === openDrawers.length - 1) {
+        drawer.removeAttribute('inert')
+      } else {
+        drawer.setAttribute('inert', '')
+      }
+    })
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (
+        mutation.type === 'attributes' &&
+        mutation.attributeName === 'open' &&
+        (mutation.target as HTMLElement).classList.contains('drawer')
+      ) {
+        updateInertState()
+        break
+      }
+    }
+  })
+
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open'],
+  })
+}
+
 export type DrawerElement = HTMLDialogElement
 
 export type DrawerRef = string | DrawerElement | null | undefined
@@ -192,69 +227,3 @@ export function props(id: string) {
   } as const
 }
 
-/**
- * Update inert state for all open drawers.
- * Only the topmost drawer should be interactive.
- */
-function updateInertState(): void {
-  const openDrawers = Array.from(
-    document.querySelectorAll<DrawerElement>('dialog.drawer[open]')
-  )
-
-  // All but the last one should be inert
-  openDrawers.forEach((drawer, index) => {
-    const isTopmost = index === openDrawers.length - 1
-    if (isTopmost) {
-      drawer.removeAttribute('inert')
-    } else {
-      drawer.setAttribute('inert', '')
-    }
-  })
-}
-
-/**
- * Enable accessibility for stacked drawers.
- * Adds `inert` attribute to underlying drawers so only the top drawer is interactive.
- * This prevents keyboard navigation and screen readers from accessing stacked drawers.
- *
- * Call once at app startup:
- * ```js
- * import { enableAccessibility } from 'css-drawer'
- * enableAccessibility()
- * ```
- *
- * @returns Cleanup function to disable the behavior
- */
-export function enableAccessibility(): () => void {
-  // Initial state
-  updateInertState()
-
-  // Watch for open attribute changes on any drawer
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (
-        mutation.type === 'attributes' &&
-        mutation.attributeName === 'open' &&
-        (mutation.target as HTMLElement).classList.contains('drawer')
-      ) {
-        updateInertState()
-        break
-      }
-    }
-  })
-
-  // Observe the entire document for drawer changes
-  observer.observe(document.body, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['open'],
-  })
-
-  return () => {
-    observer.disconnect()
-    // Clean up inert attributes
-    document.querySelectorAll<DrawerElement>('dialog.drawer[inert]').forEach((d) => {
-      d.removeAttribute('inert')
-    })
-  }
-}
