@@ -1,155 +1,60 @@
 import {
   createContext,
   useContext,
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
   forwardRef,
   type ReactNode,
   type ComponentPropsWithoutRef,
-  type MouseEvent,
-  type RefObject,
 } from 'react'
+import './drawer.css'
 
 /* ===== Types ===== */
 type Direction = 'bottom' | 'top' | 'left' | 'right'
 
 interface DrawerContextValue {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   direction?: Direction
-  dialogRef: RefObject<HTMLDialogElement | null>
 }
 
 /* ===== Context ===== */
-const DrawerContext = createContext<DrawerContextValue | null>(null)
+const DrawerContext = createContext<DrawerContextValue>({ direction: undefined })
 
 function useDrawerContext() {
-  const ctx = useContext(DrawerContext)
-  if (!ctx) throw new Error('Drawer components must be used within Drawer.Root')
-  return ctx
+  return useContext(DrawerContext)
 }
 
 /* ===== Root ===== */
 interface RootProps {
   children: ReactNode
-  /** Controlled open state */
-  open?: boolean
-  /** Callback when open state changes */
-  onOpenChange?: (open: boolean) => void
-  /** Default open state (uncontrolled) */
-  defaultOpen?: boolean
   /** Direction the drawer opens from */
   direction?: Direction
-  /** Whether to use modal behavior (default: true) */
-  modal?: boolean
 }
 
-function Root({
-  children,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-  defaultOpen = false,
-  direction,
-  modal = true,
-}: RootProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen)
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : uncontrolledOpen
-
-  const onOpenChange = useCallback(
-    (newOpen: boolean) => {
-      if (!isControlled) setUncontrolledOpen(newOpen)
-      controlledOnOpenChange?.(newOpen)
-    },
-    [isControlled, controlledOnOpenChange]
-  )
-
-  // Sync dialog state with open prop
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    if (open && !dialog.open) {
-      modal ? dialog.showModal() : dialog.show()
-    } else if (!open && dialog.open) {
-      dialog.close()
-    }
-  }, [open, modal])
-
-  // Listen for native close events (Escape, form submission, backdrop click)
-  useEffect(() => {
-    const dialog = dialogRef.current
-    if (!dialog) return
-
-    const handleClose = () => onOpenChange(false)
-    dialog.addEventListener('close', handleClose)
-    return () => dialog.removeEventListener('close', handleClose)
-  }, [onOpenChange])
-
+function Root({ children, direction }: RootProps) {
   return (
-    <DrawerContext.Provider value={{ open, onOpenChange, direction, dialogRef }}>
+    <DrawerContext.Provider value={{ direction }}>
       {children}
     </DrawerContext.Provider>
   )
 }
 
-/* ===== Trigger ===== */
-interface TriggerProps extends ComponentPropsWithoutRef<'button'> {}
-
-const Trigger = forwardRef<HTMLButtonElement, TriggerProps>(
-  ({ children, onClick, ...props }, ref) => {
-    const { onOpenChange } = useDrawerContext()
-
-    const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-      onClick?.(e)
-      if (!e.defaultPrevented) onOpenChange(true)
-    }
-
-    return (
-      <button ref={ref} type="button" onClick={handleClick} {...props}>
-        {children}
-      </button>
-    )
-  }
-)
-Trigger.displayName = 'Drawer.Trigger'
-
 /* ===== Content ===== */
-interface ContentProps extends Omit<ComponentPropsWithoutRef<'dialog'>, 'open'> {
-  /** Called when animation ends */
-  onAnimationEnd?: () => void
-}
+interface ContentProps extends Omit<ComponentPropsWithoutRef<'dialog'>, 'open'> {}
 
 const Content = forwardRef<HTMLDialogElement, ContentProps>(
-  ({ children, className, onClick, ...props }, forwardedRef) => {
-    const { dialogRef, direction, onOpenChange } = useDrawerContext()
-
-    const handleClick = (e: MouseEvent<HTMLDialogElement>) => {
-      onClick?.(e)
-      // Backdrop click - only if clicking the dialog element itself
-      if (e.target === e.currentTarget) {
-        onOpenChange(false)
-      }
-    }
+  ({ children, className, ...props }, ref) => {
+    const { direction } = useDrawerContext()
 
     return (
       <dialog
-        ref={(node) => {
-          // Handle forwarded ref
-          if (typeof forwardedRef === 'function') forwardedRef(node)
-          else if (forwardedRef) forwardedRef.current = node
-          // Handle internal ref
-          if (dialogRef && 'current' in dialogRef) {
-            (dialogRef as { current: HTMLDialogElement | null }).current = node
-          }
-        }}
+        ref={ref}
         className={`drawer ${className ?? ''}`.trim()}
         data-direction={direction}
-        onClick={handleClick}
+        onClick={(e) => {
+          props.onClick?.(e)
+          // Backdrop click - only if clicking the dialog element itself
+          if (e.target === e.currentTarget) {
+            e.currentTarget.close()
+          }
+        }}
         {...props}
       >
         {children}
@@ -158,27 +63,6 @@ const Content = forwardRef<HTMLDialogElement, ContentProps>(
   }
 )
 Content.displayName = 'Drawer.Content'
-
-/* ===== Close ===== */
-interface CloseProps extends ComponentPropsWithoutRef<'button'> {}
-
-const Close = forwardRef<HTMLButtonElement, CloseProps>(
-  ({ children, onClick, ...props }, ref) => {
-    const { onOpenChange } = useDrawerContext()
-
-    const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-      onClick?.(e)
-      if (!e.defaultPrevented) onOpenChange(false)
-    }
-
-    return (
-      <button ref={ref} type="button" onClick={handleClick} {...props}>
-        {children}
-      </button>
-    )
-  }
-)
-Close.displayName = 'Drawer.Close'
 
 /* ===== Handle ===== */
 interface HandleProps extends ComponentPropsWithoutRef<'div'> {}
@@ -212,9 +96,7 @@ Description.displayName = 'Drawer.Description'
 /* ===== Namespace Export ===== */
 export const Drawer = {
   Root,
-  Trigger,
   Content,
-  Close,
   Handle,
   Title,
   Description,
@@ -222,9 +104,7 @@ export const Drawer = {
 
 export type {
   RootProps as DrawerRootProps,
-  TriggerProps as DrawerTriggerProps,
   ContentProps as DrawerContentProps,
-  CloseProps as DrawerCloseProps,
   HandleProps as DrawerHandleProps,
   TitleProps as DrawerTitleProps,
   DescriptionProps as DrawerDescriptionProps,

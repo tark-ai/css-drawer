@@ -1,127 +1,122 @@
-import { useState } from 'react'
+import { useRef } from 'react'
 import { Drawer } from 'css-drawer/react'
 import { useIsMobile } from './hooks/useMediaQuery'
-import 'css-drawer/styles'
 
 export default function App() {
-  const [formOpen, setFormOpen] = useState(false)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [successOpen, setSuccessOpen] = useState(false)
+  const formRef = useRef<HTMLDialogElement>(null)
+  const confirmRef = useRef<HTMLDialogElement>(null)
+  const successRef = useRef<HTMLDialogElement>(null)
+  const bottomRef = useRef<HTMLDialogElement>(null)
+  const rightRef = useRef<HTMLDialogElement>(null)
 
   const isMobile = useIsMobile(768)
   const responsiveDirection = isMobile ? undefined : 'right'
+
+  function handleConfirm() {
+    confirmRef.current?.close()
+    formRef.current?.close()
+    successRef.current?.showModal()
+  }
 
   return (
     <>
       <main className="demo">
         <h1>CSS Drawer</h1>
-        <p>Vaul-like API with zero JS animations. Try nested drawers.</p>
+        <p>Zero React state. Native dialog refs only. Try nested drawers.</p>
         <div className="demo-buttons">
-          {/* Using compound component API */}
-          <Drawer.Root open={formOpen} onOpenChange={setFormOpen} direction={responsiveDirection}>
-            <Drawer.Trigger className="btn btn--primary">
-              Open Form
-            </Drawer.Trigger>
-            <Drawer.Content>
-              <Drawer.Handle />
-              <div className="drawer-content">
-                <Drawer.Title>Create Issue</Drawer.Title>
-                <Drawer.Description>
-                  Fill out the form. Opens from right on desktop, bottom on mobile.
-                </Drawer.Description>
-                <form onSubmit={(e) => { e.preventDefault(); setConfirmOpen(true) }}>
-                  <div className="form-group">
-                    <label htmlFor="title">Title</label>
-                    <input type="text" id="title" placeholder="Issue title..." />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="desc">Description</label>
-                    <textarea id="desc" placeholder="Describe the issue..." />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="priority">Priority</label>
-                    <select id="priority">
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="critical">Critical</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="assignee">Assignee</label>
-                    <input type="text" id="assignee" placeholder="Enter assignee name..." />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="labels">Labels</label>
-                    <input type="text" id="labels" placeholder="bug, feature, docs..." />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="due-date">Due Date</label>
-                    <input type="date" id="due-date" />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="estimate">Time Estimate (hours)</label>
-                    <input type="number" id="estimate" placeholder="4" min="0" />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="notes">Additional Notes</label>
-                    <textarea id="notes" placeholder="Any extra context..." />
-                  </div>
-                  <div className="actions">
-                    <Drawer.Close className="btn btn--secondary">
-                      Cancel
-                    </Drawer.Close>
-                    <button type="submit" className="btn btn--primary" style={{ flex: 1 }}>
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </Drawer.Content>
-          </Drawer.Root>
+          <button
+            className="btn btn--primary"
+            onClick={() => formRef.current?.showModal()}
+          >
+            Open Form
+          </button>
 
-          {/* Simple drawer with default direction */}
-          <Drawer.Root>
-            <Drawer.Trigger className="btn btn--secondary">
-              Bottom Drawer
-            </Drawer.Trigger>
-            <Drawer.Content>
-              <Drawer.Handle />
-              <div className="drawer-content">
-                <Drawer.Title>Simple Drawer</Drawer.Title>
-                <Drawer.Description>
-                  This drawer opens from the bottom (default direction).
-                </Drawer.Description>
-                <Drawer.Close className="btn btn--secondary btn--full">
-                  Close
-                </Drawer.Close>
-              </div>
-            </Drawer.Content>
-          </Drawer.Root>
+          <button
+            className="btn btn--secondary"
+            onClick={() => bottomRef.current?.showModal()}
+          >
+            Bottom Drawer
+          </button>
 
-          {/* Right drawer */}
-          <Drawer.Root direction="right">
-            <Drawer.Trigger className="btn btn--secondary">
-              Right Drawer
-            </Drawer.Trigger>
-            <Drawer.Content>
-              <div className="drawer-content">
-                <Drawer.Title>Right Drawer</Drawer.Title>
-                <Drawer.Description>
-                  Opens from the right. Great for desktop sidepanels.
-                </Drawer.Description>
-                <Drawer.Close className="btn btn--secondary btn--full">
-                  Close
-                </Drawer.Close>
-              </div>
-            </Drawer.Content>
-          </Drawer.Root>
+          <button
+            className="btn btn--secondary"
+            onClick={() => rightRef.current?.showModal()}
+          >
+            Right Drawer
+          </button>
         </div>
       </main>
 
-      {/* Nested Confirm Drawer */}
-      <Drawer.Root open={confirmOpen} onOpenChange={setConfirmOpen} direction={responsiveDirection}>
-        <Drawer.Content>
+      {/* Form Drawer - direction is responsive */}
+      <Drawer.Root direction={responsiveDirection}>
+        <Drawer.Content ref={formRef}>
+          <Drawer.Handle />
+          <div className="drawer-content">
+            <Drawer.Title>Create Issue</Drawer.Title>
+            <Drawer.Description>
+              Fill out the form. Opens from right on desktop, bottom on mobile.
+            </Drawer.Description>
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              confirmRef.current?.showModal()
+            }}>
+              <div className="form-group">
+                <label htmlFor="title">Title</label>
+                <input type="text" id="title" placeholder="Issue title..." />
+              </div>
+              <div className="form-group">
+                <label htmlFor="desc">Description</label>
+                <textarea id="desc" placeholder="Describe the issue..." />
+              </div>
+              <div className="form-group">
+                <label htmlFor="priority">Priority</label>
+                <select id="priority">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="assignee">Assignee</label>
+                <input type="text" id="assignee" placeholder="Enter assignee name..." />
+              </div>
+              <div className="form-group">
+                <label htmlFor="labels">Labels</label>
+                <input type="text" id="labels" placeholder="bug, feature, docs..." />
+              </div>
+              <div className="form-group">
+                <label htmlFor="due-date">Due Date</label>
+                <input type="date" id="due-date" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="estimate">Time Estimate (hours)</label>
+                <input type="number" id="estimate" placeholder="4" min="0" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="notes">Additional Notes</label>
+                <textarea id="notes" placeholder="Any extra context..." />
+              </div>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => formRef.current?.close()}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn--primary" style={{ flex: 1 }}>
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </Drawer.Content>
+      </Drawer.Root>
+
+      {/* Confirm Drawer - nested on top of form */}
+      <Drawer.Root direction={responsiveDirection}>
+        <Drawer.Content ref={confirmRef}>
           <Drawer.Handle />
           <div className="drawer-content" style={{ textAlign: 'center', paddingTop: '1rem' }}>
             <Drawer.Title>Confirm Submission?</Drawer.Title>
@@ -131,25 +126,24 @@ export default function App() {
             <div className="actions" style={{ flexDirection: 'column' }}>
               <button
                 className="btn btn--primary btn--full"
-                onClick={() => {
-                  setConfirmOpen(false)
-                  setFormOpen(false)
-                  setSuccessOpen(true)
-                }}
+                onClick={handleConfirm}
               >
                 Yes, Create Issue
               </button>
-              <Drawer.Close className="btn btn--secondary btn--full">
+              <button
+                className="btn btn--secondary btn--full"
+                onClick={() => confirmRef.current?.close()}
+              >
                 Go Back
-              </Drawer.Close>
+              </button>
             </div>
           </div>
         </Drawer.Content>
       </Drawer.Root>
 
       {/* Success Drawer */}
-      <Drawer.Root open={successOpen} onOpenChange={setSuccessOpen} direction={responsiveDirection}>
-        <Drawer.Content>
+      <Drawer.Root direction={responsiveDirection}>
+        <Drawer.Content ref={successRef}>
           <Drawer.Handle />
           <div className="drawer-content" style={{ textAlign: 'center', paddingTop: '1rem' }}>
             <div style={{
@@ -170,9 +164,50 @@ export default function App() {
             <Drawer.Description>
               Your issue has been submitted successfully.
             </Drawer.Description>
-            <Drawer.Close className="btn btn--primary btn--full" style={{ marginTop: '1rem' }}>
+            <button
+              className="btn btn--primary btn--full"
+              style={{ marginTop: '1rem' }}
+              onClick={() => successRef.current?.close()}
+            >
               Done
-            </Drawer.Close>
+            </button>
+          </div>
+        </Drawer.Content>
+      </Drawer.Root>
+
+      {/* Simple Bottom Drawer */}
+      <Drawer.Root>
+        <Drawer.Content ref={bottomRef}>
+          <Drawer.Handle />
+          <div className="drawer-content">
+            <Drawer.Title>Simple Drawer</Drawer.Title>
+            <Drawer.Description>
+              This drawer opens from the bottom (default direction).
+            </Drawer.Description>
+            <button
+              className="btn btn--secondary btn--full"
+              onClick={() => bottomRef.current?.close()}
+            >
+              Close
+            </button>
+          </div>
+        </Drawer.Content>
+      </Drawer.Root>
+
+      {/* Right Drawer */}
+      <Drawer.Root direction="right">
+        <Drawer.Content ref={rightRef}>
+          <div className="drawer-content">
+            <Drawer.Title>Right Drawer</Drawer.Title>
+            <Drawer.Description>
+              Opens from the right. Great for desktop sidepanels.
+            </Drawer.Description>
+            <button
+              className="btn btn--secondary btn--full"
+              onClick={() => rightRef.current?.close()}
+            >
+              Close
+            </button>
           </div>
         </Drawer.Content>
       </Drawer.Root>

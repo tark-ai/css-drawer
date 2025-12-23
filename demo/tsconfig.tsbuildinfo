@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/appminimal.tsx","./src/css-drawer.d.ts","./src/main.tsx","./src/vite-env.d.ts","./src/hooks/usemediaquery.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/hooks/usemediaquery.ts"],"version":"5.9.3"}
