@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.2.0
+
+### Minor Changes
+
+- Added `modal` direction for centered dialogs with scale animation. CSS is now auto-injected for both vanilla JS and React imports. Updated documentation with Angular usage guide.
+
 ## 0.1.4
 
 ### Patch Changes
