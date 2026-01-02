@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.2.1
+
+### Patch Changes
+
+- Fixed close event propagation bug in React component where closing a DOM-nested child dialog would incorrectly trigger the parent dialog's onClose/onOpenChange handlers
+
 ## 0.2.0
 
 ### Minor Changes
