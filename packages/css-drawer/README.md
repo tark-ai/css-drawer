@@ -424,7 +424,9 @@ const isMobile = useMediaQuery('(max-width: 768px)')
 
 Drawers automatically stack when opened. No configuration needed.
 
-### With Refs
+### Recommended: Sibling Pattern
+
+For the best visual stacking effect (scale + dim), place drawers as **siblings** in the DOM:
 
 ```tsx
 const drawer1 = useRef<HTMLDialogElement>(null)
@@ -436,6 +438,16 @@ drawer1.current?.showModal()
 // Open drawer2 on top
 drawer2.current?.showModal()
 // drawer1 automatically scales down and dims
+
+<>
+  <Drawer.Root>
+    <Drawer.Content ref={drawer1}>First drawer</Drawer.Content>
+  </Drawer.Root>
+
+  <Drawer.Root>
+    <Drawer.Content ref={drawer2}>Second drawer (sibling)</Drawer.Content>
+  </Drawer.Root>
+</>
 ```
 
 ### With Controlled State
@@ -467,6 +479,28 @@ const [confirmOpen, setConfirmOpen] = useState(false)
 ```
 
 Works up to 5 levels. CSS `:has()` selectors handle the visual stacking.
+
+### DOM-Nested Dialogs
+
+You can also nest a drawer inside another drawer's content (DOM nesting). This pattern works functionally—close events, buttons, and accessibility all work correctly—but the **automatic CSS scaling effect is not applied** to DOM-nested dialogs.
+
+```tsx
+// DOM-nested: works but no auto-scaling
+<Drawer.Root>
+  <Drawer.Content open={parentOpen} onOpenChange={setParentOpen}>
+    <p>Parent content</p>
+
+    {/* Child nested inside parent */}
+    <Drawer.Root>
+      <Drawer.Content open={childOpen} onOpenChange={setChildOpen}>
+        <p>Child content</p>
+      </Drawer.Content>
+    </Drawer.Root>
+  </Drawer.Content>
+</Drawer.Root>
+```
+
+Use the **sibling pattern** if you want the visual stacking effect.
 
 ---
 

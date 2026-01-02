@@ -108,6 +108,10 @@ const Content = forwardRef<HTMLDialogElement, ContentProps>(
         className={`drawer ${className ?? ''}`.trim()}
         data-direction={direction}
         onClose={(e) => {
+          // Only handle close event if it originated from THIS dialog
+          // This prevents nested dialogs from triggering parent dialog closes
+          if (e.target !== e.currentTarget) return
+
           props.onClose?.(e)
           onOpenChange?.(false)
         }}

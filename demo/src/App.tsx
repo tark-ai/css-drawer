@@ -17,6 +17,10 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
+  // DOM-nested dialogs (child rendered inside parent)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [copyConfirmOpen, setCopyConfirmOpen] = useState(false)
+
   const isMobile = useIsMobile(768)
   const responsiveDirection = isMobile ? undefined : 'right'
 
@@ -65,6 +69,13 @@ export default function App() {
             onClick={() => setSettingsOpen(true)}
           >
             Nested (Controlled)
+          </button>
+
+          <button
+            className="btn btn--secondary"
+            onClick={() => setShareOpen(true)}
+          >
+            Share (DOM Nested)
           </button>
         </div>
       </main>
@@ -332,6 +343,85 @@ export default function App() {
                 Cancel
               </button>
             </div>
+          </div>
+        </Drawer.Content>
+      </Drawer.Root>
+
+      {/* DOM-Nested: Child dialog rendered inside parent dialog */}
+      <Drawer.Root direction="modal">
+        <Drawer.Content open={shareOpen} onOpenChange={setShareOpen}>
+          <div className="drawer-content" style={{ textAlign: 'center', paddingTop: '1rem' }}>
+            <Drawer.Title>Share</Drawer.Title>
+            <Drawer.Description>
+              Share this item with others.
+            </Drawer.Description>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              background: 'hsl(0 0% 95%)',
+              borderRadius: '8px',
+              marginBottom: '1rem'
+            }}>
+              <input
+                type="text"
+                readOnly
+                value="https://example.com/share/abc123"
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  fontSize: '0.875rem',
+                  color: 'hsl(0 0% 40%)'
+                }}
+              />
+              <button
+                className="btn btn--primary"
+                style={{ padding: '0.5rem 1rem' }}
+                onClick={() => setCopyConfirmOpen(true)}
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              className="btn btn--secondary btn--full"
+              onClick={() => setShareOpen(false)}
+            >
+              Done
+            </button>
+
+            {/* Confirmation toast - DOM nested inside share dialog */}
+            <Drawer.Root direction="modal">
+              <Drawer.Content open={copyConfirmOpen} onOpenChange={setCopyConfirmOpen}>
+                <div className="drawer-content" style={{ textAlign: 'center', paddingTop: '1rem' }}>
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    margin: '0 auto 1rem',
+                    display: 'grid',
+                    placeItems: 'center',
+                    borderRadius: '50%',
+                    background: 'hsl(142 71% 45% / 0.1)',
+                    color: 'hsl(142 71% 45%)'
+                  }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <Drawer.Title>Link Copied!</Drawer.Title>
+                  <Drawer.Description>
+                    The share link has been copied to your clipboard.
+                  </Drawer.Description>
+                  <button
+                    className="btn btn--primary btn--full"
+                    onClick={() => setCopyConfirmOpen(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </Drawer.Content>
+            </Drawer.Root>
           </div>
         </Drawer.Content>
       </Drawer.Root>
