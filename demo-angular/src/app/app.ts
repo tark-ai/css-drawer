@@ -15,6 +15,9 @@ import { Component } from '@angular/core';
         <button class="btn btn--secondary" (click)="openDrawer(modalDrawer)">
           Modal
         </button>
+        <button class="btn btn--secondary" (click)="openDrawer(fullscreenModal)">
+          Fullscreen Modal
+        </button>
         <button class="btn btn--secondary" (click)="openDrawer(rightDrawer)">
           Right Drawer
         </button>
@@ -58,6 +61,17 @@ import { Component } from '@angular/core';
         <h2>Nested Modal</h2>
         <p>Modals can stack just like drawers.</p>
         <button class="btn btn--primary btn--full" (click)="closeDrawer(nestedModal)">
+          Close
+        </button>
+      </div>
+    </dialog>
+
+    <!-- Fullscreen Modal -->
+    <dialog #fullscreenModal class="drawer" data-direction="modal" style="--drawer-modal-width: 90%; --drawer-modal-height: 90%;">
+      <div class="drawer-content" style="text-align: center; padding-top: 2rem;">
+        <h2>Fullscreen Modal</h2>
+        <p>Uses --drawer-modal-width: 100% and --drawer-modal-height: 100% for fullscreen.</p>
+        <button class="btn btn--primary btn--full" (click)="closeDrawer(fullscreenModal)">
           Close
         </button>
       </div>

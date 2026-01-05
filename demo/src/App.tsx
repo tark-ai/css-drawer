@@ -9,6 +9,7 @@ export default function App() {
   const bottomRef = useRef<HTMLDialogElement>(null)
   const modalRef = useRef<HTMLDialogElement>(null)
   const nestedModalRef = useRef<HTMLDialogElement>(null)
+  const fullscreenModalRef = useRef<HTMLDialogElement>(null)
 
   // Controlled mode example
   const [rightOpen, setRightOpen] = useState(false)
@@ -55,6 +56,13 @@ export default function App() {
             onClick={() => modalRef.current?.showModal()}
           >
             Modal
+          </button>
+
+          <button
+            className="btn btn--secondary"
+            onClick={() => fullscreenModalRef.current?.showModal()}
+          >
+            Fullscreen Modal
           </button>
 
           <button
@@ -264,6 +272,30 @@ export default function App() {
             <button
               className="btn btn--primary btn--full"
               onClick={() => nestedModalRef.current?.close()}
+            >
+              Close
+            </button>
+          </div>
+        </Drawer.Content>
+      </Drawer.Root>
+
+      {/* Fullscreen Modal */}
+      <Drawer.Root direction="modal">
+        <Drawer.Content
+          ref={fullscreenModalRef}
+          style={{
+            '--drawer-modal-width': '90%',
+            '--drawer-modal-height': '90%',
+          } as React.CSSProperties}
+        >
+          <div className="drawer-content" style={{ textAlign: 'center', paddingTop: '2rem' }}>
+            <Drawer.Title>Fullscreen Modal</Drawer.Title>
+            <Drawer.Description>
+              Uses --drawer-width: 100% and --drawer-height: 100% for fullscreen.
+            </Drawer.Description>
+            <button
+              className="btn btn--primary btn--full"
+              onClick={() => fullscreenModalRef.current?.close()}
             >
               Close
             </button>

@@ -613,8 +613,16 @@ Override any of these CSS custom properties to customize the drawer:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `--drawer-max-width` | `500px` | Maximum width |
-| `--drawer-max-height` | `96dvh` | Maximum height (uses dynamic viewport) |
+| `--drawer-width` | direction-based | Drawer width (100% for bottom/top, 500px for left/right) |
+| `--drawer-height` | direction-based | Drawer height (auto for bottom/top, 100dvh for left/right) |
+| `--drawer-max-width` | direction-based | Maximum width (none for bottom/top, 90% for left/right/modal) |
+| `--drawer-max-height` | `96dvh` | Maximum height (bottom/top/modal only) |
+| `--drawer-modal-width` | `fit-content` | Modal width |
+| `--drawer-modal-height` | `fit-content` | Modal height |
+
+> **Note:** `--drawer-width`, `--drawer-height`, and `--drawer-max-width` are not defined globally—each direction uses sensible fallbacks. Set these per-instance to override.
+
+> **Fullscreen modal:** Set `--drawer-modal-width`, `--drawer-modal-height`, `--drawer-max-width`, and `--drawer-max-height` to `100%`.
 
 #### Handle
 

@@ -1,6 +1,6 @@
 {
   "name": "css-drawer",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Vaul-quality drawer component using native <dialog> and pure CSS animations",
   "type": "module",
   "main": "./dist/index.cjs",

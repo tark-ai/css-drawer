@@ -8,8 +8,9 @@
   --drawer-backdrop-blur: 4px;
 
   /* Sizing */
-  --drawer-max-width: 500px;
   --drawer-max-height: 96dvh;
+  --drawer-modal-width: fit-content;
+  --drawer-modal-height: fit-content;
 
   /* Handle */
   --drawer-handle-bg: hsl(0 0% 80%);
@@ -88,10 +89,10 @@ body:has(.drawer[open]) {
   --_border-radius: var(--drawer-radius) var(--drawer-radius) 0 0;
   inset: auto 0 0 0;
   margin-inline: auto;
-  width: 100%;
-  max-width: var(--drawer-max-width);
-  height: auto;
-  max-height: var(--drawer-max-height);
+  width: var(--drawer-width, 100%);
+  max-width: var(--drawer-max-width, none);
+  height: var(--drawer-height, auto);
+  max-height: var(--drawer-max-height, 96dvh);
   border-radius: var(--drawer-border-radius, var(--_border-radius));
   box-shadow: var(--drawer-shadow-bottom);
   translate: var(--_translate-closed);
@@ -138,9 +139,9 @@ body:has(.drawer[open]) {
   --_border-radius: var(--drawer-radius) 0 0 var(--drawer-radius);
   inset: 0 0 0 auto;
   margin: 0;
-  width: 100%;
-  max-width: var(--drawer-max-width);
-  height: 100dvh;
+  width: var(--drawer-width, 500px);
+  max-width: var(--drawer-max-width, 90%);
+  height: var(--drawer-height, 100dvh);
   max-height: 100dvh;
   box-shadow: var(--drawer-shadow-right);
 }
@@ -151,9 +152,9 @@ body:has(.drawer[open]) {
   --_border-radius: 0 var(--drawer-radius) var(--drawer-radius) 0;
   inset: 0 auto 0 0;
   margin: 0;
-  width: 100%;
-  max-width: var(--drawer-max-width);
-  height: 100dvh;
+  width: var(--drawer-width, 500px);
+  max-width: var(--drawer-max-width, 90%);
+  height: var(--drawer-height, 100dvh);
   max-height: 100dvh;
   box-shadow: var(--drawer-shadow-left);
 }
@@ -164,10 +165,10 @@ body:has(.drawer[open]) {
   --_border-radius: 0 0 var(--drawer-radius) var(--drawer-radius);
   inset: 0 0 auto 0;
   margin-inline: auto;
-  width: 100%;
-  max-width: var(--drawer-max-width);
-  height: auto;
-  max-height: var(--drawer-max-height);
+  width: var(--drawer-width, 100%);
+  max-width: var(--drawer-max-width, none);
+  height: var(--drawer-height, auto);
+  max-height: var(--drawer-max-height, 96dvh);
   box-shadow: var(--drawer-shadow-top);
 }
 
@@ -177,10 +178,10 @@ body:has(.drawer[open]) {
   --_border-radius: var(--drawer-radius);
   inset: 0;
   margin: auto;
-  width: fit-content;
-  max-width: var(--drawer-max-width);
-  height: fit-content;
-  max-height: var(--drawer-max-height);
+  width: var(--drawer-modal-width, fit-content);
+  max-width: var(--drawer-max-width, 90%);
+  height: var(--drawer-modal-height, fit-content);
+  max-height: var(--drawer-max-height, 96dvh);
   box-shadow: var(--drawer-shadow-modal);
   scale: var(--drawer-nested-scale);
 }

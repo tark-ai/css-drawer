@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.2.2
+
+### Patch Changes
+
+- Added additional variables to overwrite width, height, max-width and max-height
+
 ## 0.2.1
 
 ### Patch Changes
