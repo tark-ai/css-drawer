@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.3.1
+
+### Patch Changes
+
+- Dependencies updated for vulnerable packages
+
 ## 0.3.0
 
 ### Minor Changes

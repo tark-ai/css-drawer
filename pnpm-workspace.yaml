@@ -6,3 +6,11 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - rolldown
+
+overrides:
+  '@angular/compiler@>=21.0.0-next.0 <21.0.7': '>=21.0.7'
+  '@angular/core@>=21.0.0-next.0 <21.0.7': '>=21.0.7'
+  '@modelcontextprotocol/sdk@<1.25.2': '>=1.25.2'
+  tar@<=7.5.2: '>=7.5.3'
+  tar@<=7.5.3: '>=7.5.4'
+  undici@>=7.0.0 <7.18.2: '>=7.18.2'
