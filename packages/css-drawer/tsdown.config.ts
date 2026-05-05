@@ -1,5 +1,4 @@
 import { defineConfig } from 'tsdown'
-import injectCssPlugin from '@bosh-code/tsdown-plugin-inject-css'
 
 export default defineConfig({
   entry: ['src/index.ts', 'src/react.tsx'],
@@ -7,5 +6,7 @@ export default defineConfig({
   dts: true,
   clean: true,
   minify: true,
-  plugins: [injectCssPlugin()],
+  css: {
+    inject: true,
+  },
 })
