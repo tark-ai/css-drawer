@@ -24,6 +24,8 @@ export interface CreateDrawerOptions {
   className?: string
   /** Close when clicking outside (default: true) */
   closeOnOutsideClick?: boolean
+  /** Lock body scroll while open (default: true) */
+  scrollLock?: boolean
 }
 
 export interface DrawerEventHandlers {
@@ -97,7 +99,7 @@ export function getTop(): DrawerElement | null {
  * Create a drawer element programmatically
  */
 export function create(options: CreateDrawerOptions = {}): DrawerElement {
-  const { id, content = '', direction, handle = true, className = '', closeOnOutsideClick = true } = options
+  const { id, content = '', direction, handle = true, className = '', closeOnOutsideClick = true, scrollLock = true } = options
 
   const dialog = document.createElement('dialog') as DrawerElement
   dialog.className = `drawer ${className}`.trim()
@@ -105,6 +107,9 @@ export function create(options: CreateDrawerOptions = {}): DrawerElement {
   if (direction) dialog.dataset.direction = direction
   if (!closeOnOutsideClick) {
     dialog.dataset.closeOnOutsideClick = 'false'
+  }
+  if (!scrollLock) {
+    dialog.dataset.scrollLock = 'false'
   }
 
   dialog.innerHTML = `

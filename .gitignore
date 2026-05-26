@@ -2,3 +2,11 @@ node_modules
 dist
 *.log
 .DS_Store
+
+# TypeScript incremental build artifacts
+*.tsbuildinfo
+
+# Test artifacts
+test-results
+playwright-report
+coverage

@@ -91,10 +91,17 @@ interface ContentProps extends Omit<ComponentPropsWithoutRef<'dialog'>, 'open'> 
   onOpenChange?: (open: boolean) => void
   /** Close when clicking outside the drawer (default: true) */
   closeOnOutsideClick?: boolean
+  /**
+   * Lock body scroll while this drawer is open (default: true).
+   *
+   * Set to `false` for the rare side-panel-allows-scroll case. The CSS-only
+   * fallback (`overflow: hidden`) is also disabled for opted-out drawers.
+   */
+  scrollLock?: boolean
 }
 
 const Content = forwardRef<HTMLDialogElement, ContentProps>(
-  ({ children, className, open, onOpenChange, closeOnOutsideClick = true, ...props }, ref) => {
+  ({ children, className, open, onOpenChange, closeOnOutsideClick = true, scrollLock = true, ...props }, ref) => {
     const { direction } = useDrawerContext()
     const internalRef = useRef<HTMLDialogElement>(null)
     const dialogRef = (ref as React.RefObject<HTMLDialogElement>) || internalRef
@@ -116,6 +123,7 @@ const Content = forwardRef<HTMLDialogElement, ContentProps>(
         ref={dialogRef}
         className={`drawer ${className ?? ''}`.trim()}
         data-direction={direction}
+        data-scroll-lock={scrollLock ? undefined : 'false'}
         onClose={(e) => {
           // Only handle close event if it originated from THIS dialog
           // This prevents nested dialogs from triggering parent dialog closes

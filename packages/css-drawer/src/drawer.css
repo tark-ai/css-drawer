@@ -60,9 +60,14 @@ body {
 }
 
 body:has(.drawer[open]) {
-  overflow: hidden;
   scale: var(--drawer-nested-scale);
   border-radius: var(--drawer-radius);
+}
+
+/* Defense-in-depth for browsers without JS scroll lock; respects opt-out.
+   The JS scroll lock in scroll-lock.ts is the load-bearing fix on iOS Safari. */
+body:has(.drawer[open]:not([data-scroll-lock="false"])) {
+  overflow: hidden;
 }
 
 /* Base drawer */

@@ -1,6 +1,6 @@
 {
   "name": "css-drawer",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Vaul-quality drawer component using native <dialog> and pure CSS animations",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -36,7 +36,9 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch"
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -54,9 +56,11 @@
     "@tsdown/css": "^0.21.10",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "happy-dom": "^20.9.0",
     "react": "^19.2.5",
     "tsdown": "^0.21.10",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "keywords": [
     "drawer",

@@ -198,6 +198,7 @@ The `onOpenChange` callback fires when:
 | `open` | `boolean` | - | Controlled open state |
 | `onOpenChange` | `(open: boolean) => void` | - | Called when open state changes |
 | `closeOnOutsideClick` | `boolean` | `true` | Close when clicking outside the drawer |
+| `scrollLock` | `boolean` | `true` | Lock body scroll while open. See [Body Scroll Lock](#body-scroll-lock). |
 | `className` | `string` | - | Additional CSS classes |
 | `...props` | `DialogHTMLAttributes` | - | All native dialog props |
 
@@ -386,6 +387,7 @@ open(drawer)
 | `handle` | `boolean` | `true` | Include drag handle |
 | `className` | `string` | `''` | Additional CSS classes |
 | `closeOnOutsideClick` | `boolean` | `true` | Close when clicking outside |
+| `scrollLock` | `boolean` | `true` | Lock body scroll while open. See [Body Scroll Lock](#body-scroll-lock). |
 
 **Returns:** `HTMLDialogElement`
 
@@ -572,6 +574,56 @@ Accessibility is automatic:
 - **Screen readers**: Only the top drawer is accessible
 
 No setup required.
+
+---
+
+## Body Scroll Lock
+
+While a drawer is open, the underlying page is prevented from scrolling. The lock is applied as `position: fixed; top: -<scrollY>px; width: 100%` on `<body>` (the same technique Vaul, Radix Dialog, and the archived `body-scroll-lock` package use), and on close the styles are reverted and `window.scrollTo({ top: <savedScrollY>, behavior: 'instant' })` restores the scroll position. A CSS-only `overflow: hidden` rule stays as defense-in-depth but isn't load-bearing.
+
+The lock is **counter-based**: incremented per opt-in drawer that's open, decremented when one closes. Body styles are applied only on the `0 → positive` transition and restored only on the `positive → 0` transition. That property is what makes the next section work.
+
+### Drawer → another drawer is handled automatically
+
+The common multi-modal flow — a mobile menu drawer closes and a checkout drawer opens in the same synchronous handler — is the case consumers hit. Because the counter goes `1 → 1` across the swap, **the lock is never released mid-transition**, so the body stays pinned and scroll position is preserved.
+
+```tsx
+function handleSignIn() {
+  setMenuOpen(false)    // close one css-drawer
+  setCheckoutOpen(true) // open another in the same tick
+}
+```
+
+Verified in Chromium mobile emulation (`e2e/scroll-lock.spec.ts`):
+
+```
+during swap:  body.position=fixed  body.top=-800px   ← lock NEVER released
+final scrollY after close = 800                       ← restored on last close
+```
+
+**If you're upgrading from 0.3.x and have your own consumer-side `useEffect` scroll lock, remove it.** The bug where the page jumps to the wrong scroll position during a drawer-to-drawer transition is almost certainly that consumer `useEffect` running its cleanup mid-swap. With v0.4.0 owning the lock, the counter holds it continuously.
+
+### Opting out (`scrollLock={false}`)
+
+For the rare side-panel-allows-scroll case:
+
+```tsx
+<Drawer.Content ref={ref} scrollLock={false}>...</Drawer.Content>
+```
+
+```ts
+// Vanilla
+create({ id: 'side-panel', scrollLock: false })
+```
+
+```html
+<!-- HTML -->
+<dialog class="drawer" data-scroll-lock="false">...</dialog>
+```
+
+The CSS defense-in-depth (`overflow: hidden` via `:has()`) also respects this opt-out.
+
+All three are exported from both `css-drawer` and `css-drawer/react`.
 
 ---
 
