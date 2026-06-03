@@ -76,5 +76,10 @@ export function initDrawerObserver(): void {
   })
 }
 
-// Auto-initialize on import
-initDrawerObserver()
+// NOTE: Auto-init from this module's body was removed intentionally —
+// rolldown treats observer.ts as side-effect-free (it's not in the package's
+// `sideEffects` whitelist, and intentionally so to keep the public surface
+// per-entry), so a top-level call here gets tree-shaken when consumers only
+// reach DRAWER_STATE_CHANGE without actually invoking initDrawerObserver.
+// Each entry file (src/index.ts, src/react.tsx) calls initDrawerObserver()
+// explicitly; the `initialized` guard above makes that safe + idempotent.

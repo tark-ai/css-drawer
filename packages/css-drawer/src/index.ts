@@ -3,7 +3,17 @@
  * Works with any framework: React, Vue, Svelte, vanilla JS
  */
 import './drawer.css'
-import { DRAWER_STATE_CHANGE } from './observer'
+import { DRAWER_STATE_CHANGE, initDrawerObserver } from './observer'
+
+// Eager-init the shared MutationObserver from THIS entry file so the call
+// survives tree-shaking. The observer module itself isn't in the package's
+// `sideEffects` whitelist (intentional — unbundle mode keeps the chunk
+// graph clean), so a top-level call inside observer.ts would be dropped
+// when consumers don't reach it via the named exports. Calling it from the
+// whitelisted entry guarantees scrollLock, the `inert` z-index manager,
+// and the `drawer:statechange` event always work, regardless of which
+// drawer APIs the consumer ends up using.
+initDrawerObserver()
 
 export type DrawerElement = HTMLDialogElement
 
