@@ -1,5 +1,11 @@
 # css-drawer
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated build settings to ensure CSS and observers don't get tree shaken
+
 ## 0.4.0
 
 ### Minor Changes
